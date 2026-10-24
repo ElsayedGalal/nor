@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>رحلة الورد - مفاجأة عيد ميلاد نور الهدى ❤️</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Amiri:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: #080505; font-family: 'Cairo', sans-serif; color: #fff;
+    }
+
+    #game-container {
+      position: relative; width: 100vw; height: 100vh; overflow: hidden;
+      display: flex; justify-content: center; align-items: center;
+      background: #080505;
+    }
+
+    /* Ambient Blurred Layers for Vertical Screens */
+    .blur-layer {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background-size: cover; background-position: center;
+      filter: blur(28px) brightness(0.32);
+      transform: scale(1.18);
+      opacity: 0; transition: opacity 1.2s ease-in-out;
+      z-index: 1; pointer-events: none;
+      display: none;
+    }
+    .blur-layer.active { opacity: 1; }
+
+    /* Cinematic Scene Layers - Default / Landscape */
+    .scene-layer {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background-size: cover; background-position: center;
+      opacity: 0; transition: opacity 1.2s ease-in-out, transform 8s ease-out;
+      transform: scale(1.02); z-index: 2;
+    }
+    .scene-layer.active {
+      opacity: 1; transform: scale(1.06); z-index: 3;
+    }
+
+    /* Cinematic Letterbox Bars (Desktop & Landscape) */
+    .letterbox-bar {
+      position: absolute; left: 0; width: 100%; height: 6vh; background: #000;
+      z-index: 20; border-color: rgba(255,255,255,0.08);
+    }
+    .letterbox-top { top: 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .letterbox-bottom { bottom: 0; border-top: 1px solid rgba(255,255,255,0.08); }
+
+    /* Particles & FX Canvas */
+    #fxCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 15; pointer-events: none; }
+
+    /* Sound Control Button */
+    .sound-toggle {
+      position: absolute; top: 7vh; left: 20px; z-index: 50;
+      background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.3);
+      width: 44px; height: 44px; border-radius: 50%; display: flex;
+      justify-content: center; align-items: center; cursor: pointer; font-size: 18px;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+
+    /* Dialog Wrapper & Box */
+    .dialog-wrapper {
+      position: absolute; bottom: 8vh; left: 50%; transform: translateX(-50%);
+      width: 92%; max-width: 680px; z-index: 35; transition: all 0.5s ease;
+    }
+    .dialog-box {
+      background: rgba(18, 12, 10, 0.9); backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px); border: 1.5px solid rgba(225, 112, 85, 0.45);
+      border-radius: 22px; padding: 22px 26px; box-shadow: 0 20px 45px rgba(0,0,0,0.75);
+      position: relative;
+    }
+    .speaker-tag {
+      position: absolute; top: -16px; right: 26px;
+      background: linear-gradient(135deg, #d63031, #b71540);
+      color: #fff; font-weight: 800; font-size: 15px; padding: 3px 20px;
+      border-radius: 18px; border: 1px solid rgba(255,255,255,0.6);
+      box-shadow: 0 4px 15px rgba(214, 48, 49, 0.4);
+    }
+    .dialog-text {
+      font-size: 17px; line-height: 1.85; color: #fdfbf7; font-weight: 600;
+      min-height: 54px;
+    }
+    .dialog-actions {
+      margin-top: 14px; display: flex; justify-content: flex-end;
+    }
+    .action-btn {
+      background: linear-gradient(135deg, #e84393, #d63031);
+      color: #fff; border: none; font-size: 15px; font-weight: 800;
+      padding: 10px 26px; border-radius: 30px; cursor: pointer;
+      box-shadow: 0 4px 18px rgba(232, 67, 147, 0.45);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      font-family: 'Cairo', sans-serif;
+    }
+    .action-btn:active { transform: scale(0.95); }
+
+    /* Parchment Letter Modal */
+    .letter-modal {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.85); z-index: 60; display: flex;
+      justify-content: center; align-items: center; opacity: 0; pointer-events: none;
+      transition: opacity 0.5s ease; backdrop-filter: blur(10px);
+      padding: 20px;
+    }
+    .letter-modal.show { opacity: 1; pointer-events: auto; }
+    .parchment {
+      width: 90%; max-width: 460px; max-height: 85vh; overflow-y: auto;
+      background: #fffcf4; border: 3px solid #d4a373; border-radius: 22px;
+      padding: 35px 28px; color: #3e2723; text-align: center;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.85); transform: scale(0.9);
+      transition: transform 0.4s ease;
+    }
+    .letter-modal.show .parchment { transform: scale(1); }
+    .parchment-title { font-family: 'Amiri', serif; font-size: 26px; color: #b71540; margin-bottom: 15px; font-weight: 700; }
+    .parchment-content { font-size: 18px; line-height: 2; font-weight: 600; margin-bottom: 25px; }
+
+    /* Celebration Finale Card */
+    .celebration-card {
+      position: absolute; z-index: 70; width: 90%; max-width: 500px;
+      max-height: 90vh; overflow-y: auto;
+      background: rgba(255, 255, 255, 0.97); border: 2px solid #ffd166;
+      border-radius: 26px; padding: 32px 24px; text-align: center;
+      color: #2c1a0e; box-shadow: 0 30px 70px rgba(0,0,0,0.8);
+      opacity: 0; pointer-events: none; transform: translateY(30px);
+      transition: all 0.8s ease; backdrop-filter: blur(12px);
+    }
+    .celebration-card.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    .celebration-title { font-size: 24px; font-weight: 900; color: #d63031; margin-bottom: 12px; }
+    .celebration-sub { font-size: 16px; line-height: 1.85; color: #4e382c; font-weight: 600; }
+
+    /* Counter */
+    .counter-wrapper {
+      margin-top: 18px; padding-top: 15px; border-top: 2px dashed rgba(214, 48, 49, 0.25);
+    }
+    .counter-label { font-size: 13px; text-transform: uppercase; color: #7f8c8d; font-weight: 700; }
+    .counter-digits { font-size: 16px; font-weight: 800; color: #d63031; margin-top: 6px; }
+
+    /* Splash Screen */
+    .splash-screen {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(circle at center, #2e1713 0%, #0d0807 100%);
+      z-index: 100; display: flex; flex-direction: column; justify-content: center;
+      align-items: center; transition: opacity 0.8s ease; text-align: center; padding: 20px;
+    }
+    .splash-screen.hide { opacity: 0; pointer-events: none; }
+    .heart-icon {
+      width: 120px; height: 120px; cursor: pointer;
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(214, 48, 49, 0.6)); }
+      50% { transform: scale(1.1); filter: drop-shadow(0 0 35px rgba(232, 67, 147, 0.9)); }
+    }
+    .splash-text { margin-top: 22px; font-size: 18px; font-weight: 700; color: #ffb88c; }
+    
+    .rotate-hint {
+      margin-top: 18px; font-size: 13px; color: #f5cd79; font-weight: 600;
+      background: rgba(255, 255, 255, 0.08); padding: 7px 18px; border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.15); display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ========================================================= */
+    /* 📱 RESPONSIVE ADAPTATION FOR VERTICAL MOBILE SCREENS      */
+    /* ========================================================= */
+    @media (orientation: portrait) {
+      .blur-layer {
+        display: block; /* Activate ambient background blur */
+      }
+      .letterbox-bar {
+        display: none; /* Hide bars so they don't waste precious vertical space */
+      }
+      .sound-toggle {
+        top: 16px; left: 16px; width: 40px; height: 40px; font-size: 16px;
+      }
+
+      /* Perfect 16:9 Uncropped Cinematic Screen */
+      .scene-layer {
+        top: 6.5vh;
+        left: 4%;
+        width: 92%;
+        height: auto;
+        aspect-ratio: 16 / 9;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+        border-radius: 20px;
+        box-shadow: 0 16px 45px rgba(0,0,0,0.85), 0 0 25px rgba(214, 48, 49, 0.25);
+        border: 1.5px solid rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+      }
+      .scene-layer.active {
+        transform: scale(1.02); /* Mild scaling to fit frame */
+      }
+
+      /* Dialogue box positioned comfortably below the image */
+      .dialog-wrapper {
+        bottom: 4vh;
+        width: 92%;
+        max-width: 480px;
+      }
+      .dialog-box {
+        padding: 18px 20px;
+        border-radius: 20px;
+      }
+      .speaker-tag {
+        top: -14px; right: 20px; font-size: 13px; padding: 2px 16px;
+      }
+      .dialog-text {
+        font-size: 15px; line-height: 1.75; min-height: 48px;
+      }
+      .action-btn {
+        padding: 9px 22px; font-size: 14px;
+      }
+
+      /* Modals Responsive */
+      .parchment {
+        padding: 26px 20px;
+      }
+      .parchment-title { font-size: 22px; margin-bottom: 10px; }
+      .parchment-content { font-size: 16px; line-height: 1.85; margin-bottom: 20px; }
+
+      .celebration-card {
+        padding: 26px 20px;
+      }
+      .celebration-title { font-size: 21px; margin-bottom: 10px; }
+      .celebration-sub { font-size: 15px; line-height: 1.75; }
+      .counter-digits { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    <div class="letterbox-bar letterbox-top"></div>
+    <div class="letterbox-bar letterbox-bottom"></div>
+    <div class="sound-toggle" id="soundBtn">🔊</div>
+
+    <!-- Ambient Blurred Background Layers (for Vertical Screens) -->
+    <div class="blur-layer active" id="bgBlur1" style="background-image: url('scene1.jpeg');"></div>
+    <div class="blur-layer" id="bgBlur2"></div>
+
+    <!-- Sharp Main Cinematic Scenes Layers -->
+    <div class="scene-layer active" id="bgLayer1" style="background-image: url('scene1.jpeg');"></div>
+    <div class="scene-layer" id="bgLayer2"></div>
+
+    <!-- FX Particle Canvas -->
+    <canvas id="fxCanvas"></canvas>
+
+    <!-- Dialog Box -->
+    <div class="dialog-wrapper" id="dialogWrapper" style="display:none;">
+      <div class="dialog-box">
+        <div class="speaker-tag" id="speakerName">نور الهدى</div>
+        <div class="dialog-text" id="dialogText">...</div>
+        <div class="dialog-actions">
+          <button class="action-btn" id="nextBtn">التالي ➔</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Letter Overlay -->
+    <div class="letter-modal" id="letterModal">
+      <div class="parchment">
+        <div class="parchment-title">إلى نور الهدى.. 💌</div>
+        <div class="parchment-content">
+          "اتبعي بتلات الورد تحت ضوء القمر.. <br>
+          فهناك سر جميل ينتظرك في قلب الحديقة." 🌹✨
+        </div>
+        <button class="action-btn" id="leaveDoorBtn">الخروج إلى الحديقة 🌸</button>
+      </div>
+    </div>
+
+    <!-- Celebration Finale Card -->
+    <div class="celebration-card" id="celebrationCard">
+      <div class="celebration-title">🎉 كل سنة وانتي طيبة يا نور الهدى 🎉</div>
+      <div class="celebration-sub">
+        أول عيد ميلاد ليكي معايا.. وبداية لكل سنين الخير والفرح وأجمل أيام العمر مع بعض ❤️
+      </div>
+      <div class="counter-wrapper">
+        <div class="counter-label">معاً منذ 11 أغسطس 2026 💕</div>
+        <div class="counter-digits" id="liveTimer">جاري الحساب...</div>
+      </div>
+      <button class="action-btn" onclick="location.reload()" style="margin-top:20px; font-size:14px;">إعادة المشاهد ↺</button>
+    </div>
+
+    <!-- Initial Entry Splash -->
+    <div class="splash-screen" id="startScreen">
+      <div class="heart-icon" id="enterBtn">
+        <svg viewBox="0 0 32 29" width="100%" height="100%" fill="#d63031">
+          <path d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,16,19.6,16,19.6s16-10.2,16-19.6 C32,3.8,28.2,0,23.6,0z"/>
+        </svg>
+      </div>
+      <div class="splash-text">اضغطي على القلب لبدء المغامرة ✨</div>
+      <div class="rotate-hint">
+        <span>🔄</span> يمكنكِ تدوير الهاتف بالعرض لتجربة سينمائية كاملة
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- 1. Sound Synthesizer & Romantic Ambient Music ---
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let actx = null;
+    let isMuted = false;
+
+    function initAudio() {
+      if (!actx) actx = new AudioCtx();
+      if (actx.state === 'suspended') actx.resume();
+    }
+
+    function playTone(freq, type, dur, delay=0, vol=0.2) {
+      if (!actx || isMuted) return;
+      setTimeout(() => {
+        try {
+          const osc = actx.createOscillator();
+          const gain = actx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, actx.currentTime);
+          gain.gain.setValueAtTime(vol, actx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
+          osc.connect(gain);
+          gain.connect(actx.destination);
+          osc.start();
+          osc.stop(actx.currentTime + dur);
+        } catch(e){}
+      }, delay * 1000);
+    }
+
+    function playDoorbell() {
+      initAudio();
+      playTone(659.25, 'sine', 0.9, 0, 0.35); // E5
+      playTone(523.25, 'sine', 1.4, 0.45, 0.35); // C5
+    }
+
+    function playChime() {
+      initAudio();
+      [523, 659, 784, 1046, 1318].forEach((f, i) => playTone(f, 'triangle', 0.5, i * 0.08, 0.15));
+    }
+
+    // صوت احتفال وألعاب نارية هادئ وساحر (فرقعة ناعمة يعقبها بريق سحري متلألئ)
+    function playBoom() {
+      initAudio();
+      if (!actx || isMuted) return;
+      try {
+        const osc = actx.createOscillator();
+        const gain = actx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(130, actx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(32, actx.currentTime + 0.35);
+        gain.gain.setValueAtTime(0.18, actx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(actx.destination);
+        osc.start();
+        osc.stop(actx.currentTime + 0.35);
+
+        const sparkleTones = [1150, 1480, 1820, 2150];
+        sparkleTones.forEach((f, idx) => {
+          setTimeout(() => {
+            if (!actx || isMuted) return;
+            try {
+              const sOsc = actx.createOscillator();
+              const sGain = actx.createGain();
+              sOsc.type = 'sine';
+              sOsc.frequency.setValueAtTime(f + (Math.random() * 80 - 40), actx.currentTime);
+              sGain.gain.setValueAtTime(0.035, actx.currentTime);
+              sGain.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + 0.22);
+              sOsc.connect(sGain);
+              sGain.connect(actx.destination);
+              sOsc.start();
+              sOsc.stop(actx.currentTime + 0.22);
+            } catch(e){}
+          }, idx * 45 + Math.random() * 25);
+        });
+      } catch(e){}
+    }
+
+    const pianoScale = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 293.66, 349.23, 440.00, 523.25];
+    let noteIdx = 0;
+    function startMusic() {
+      setInterval(() => {
+        if (!isMuted && actx) {
+          playTone(pianoScale[noteIdx % pianoScale.length], 'sine', 1.8, 0, 0.08);
+          noteIdx++;
+        }
+      }, 750);
+    }
+
+    document.getElementById('soundBtn').addEventListener('click', () => {
+      isMuted = !isMuted;
+      document.getElementById('soundBtn').innerText = isMuted ? '🔇' : '🔊';
+    });
+
+    // --- 2. Canvas FX (Floating Rose Petals & Fireworks) ---
+    const fxCanvas = document.getElementById('fxCanvas');
+    const fxCtx = fxCanvas.getContext('2d');
+
+    function resize() {
+      fxCanvas.width = window.innerWidth;
+      fxCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    window.addEventListener('orientationchange', () => setTimeout(resize, 200));
+    resize();
+
+    const petals = [];
+    for (let i = 0; i < 40; i++) {
+      petals.push({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        sz: 6 + Math.random() * 8,
+        vx: -0.8 + Math.random() * 1.6,
+        vy: 1.2 + Math.random() * 1.8,
+        rot: Math.random() * Math.PI * 2,
+        vRot: (Math.random() - 0.5) * 0.03
+      });
+    }
+
+    const fireworks = [];
+    function spawnFirework() {
+      playBoom();
+      const ox = fxCanvas.width * (0.2 + Math.random() * 0.6);
+      const oy = fxCanvas.height * (0.15 + Math.random() * 0.35);
+      const colors = ['#ff4d6d', '#ffbe0b', '#00f5d4', '#f72585', '#ffd166', '#ffffff'];
+      const col = colors[Math.floor(Math.random() * colors.length)];
+      for (let i = 0; i < 55; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const spd = 2 + Math.random() * 5.5;
+        fireworks.push({
+          x: ox, y: oy, vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd,
+          color: col, alpha: 1.0, life: 0.95 + Math.random() * 0.04
+        });
+      }
+    }
+
+    function renderFX() {
+      fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+
+      // Draw Falling Petals
+      fxCtx.fillStyle = '#d63031';
+      petals.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vRot;
+        if (p.y > fxCanvas.height) { p.y = -10; p.x = Math.random() * fxCanvas.width; }
+        if (p.x > fxCanvas.width) p.x = 0;
+        if (p.x < 0) p.x = fxCanvas.width;
+
+        fxCtx.save();
+        fxCtx.translate(p.x, p.y);
+        fxCtx.rotate(p.rot);
+        fxCtx.beginPath();
+        fxCtx.ellipse(0, 0, p.sz, p.sz * 0.55, 0, 0, Math.PI * 2);
+        fxCtx.fill();
+        fxCtx.restore();
+      });
+
+      // Draw Fireworks
+      for (let i = fireworks.length - 1; i >= 0; i--) {
+        const fw = fireworks[i];
+        fw.x += fw.vx;
+        fw.y += fw.vy;
+        fw.vy += 0.05;
+        fw.alpha *= fw.life;
+
+        fxCtx.fillStyle = fw.color;
+        fxCtx.globalAlpha = fw.alpha;
+        fxCtx.beginPath();
+        fxCtx.arc(fw.x, fw.y, 3, 0, Math.PI * 2);
+        fxCtx.fill();
+        fxCtx.globalAlpha = 1.0;
+
+        if (fw.alpha < 0.04) fireworks.splice(i, 1);
+      }
+
+      requestAnimationFrame(renderFX);
+    }
+    renderFX();
+
+    // --- 3. Scene Transition Controller (Dual Layers + Blur Backdrop) ---
+    let currentLayer = 1;
+    function switchSceneImage(imgSrc) {
+      const l1 = document.getElementById('bgLayer1');
+      const l2 = document.getElementById('bgLayer2');
+      const b1 = document.getElementById('bgBlur1');
+      const b2 = document.getElementById('bgBlur2');
+      
+      if (currentLayer === 1) {
+        l2.style.backgroundImage = `url('${imgSrc}')`;
+        if (b2) b2.style.backgroundImage = `url('${imgSrc}')`;
+        l2.classList.add('active');
+        if (b2) b2.classList.add('active');
+        l1.classList.remove('active');
+        if (b1) b1.classList.remove('active');
+        currentLayer = 2;
+      } else {
+        l1.style.backgroundImage = `url('${imgSrc}')`;
+        if (b1) b1.style.backgroundImage = `url('${imgSrc}')`;
+        l1.classList.add('active');
+        if (b1) b1.classList.add('active');
+        l2.classList.remove('active');
+        if (b2) b2.classList.remove('active');
+        currentLayer = 1;
+      }
+    }
+
+    // --- 4. Visual Novel Story Flow Script ---
+    const dialogWrapper = document.getElementById('dialogWrapper');
+    const speakerName = document.getElementById('speakerName');
+    const dialogText = document.getElementById('dialogText');
+    const nextBtn = document.getElementById('nextBtn');
+    const letterModal = document.getElementById('letterModal');
+    const celebrationCard = document.getElementById('celebrationCard');
+
+    let storyIndex = 0;
+
+    const gameSteps = [
+      // 0: Scene 1 (Living Room)
+      {
+        image: 'scene1.jpeg',
+        speaker: 'نور الهدى',
+        text: 'مساء هادئ ومريح في البيت بعد يوم طويل.. كل شيء ساكن ومطمئن ✨',
+        btn: 'متابعة الجلوس ➔',
+        action: () => {
+          setTimeout(() => {
+            playDoorbell();
+            advanceToStep(1);
+          }, 500);
+        }
+      },
+      // 1: Scene 1 (Doorbell rings)
+      {
+        image: 'scene1.jpeg',
+        speaker: 'نور الهدى',
+        text: 'جرس الباب رن فجأة! يا ترى مين ممكن يكون واصل في الوقت ده؟ 🚪🔔',
+        btn: 'التوجه لفتح الباب 🚪',
+        action: () => advanceToStep(2)
+      },
+      // 2: Scene 2 (Front Door & Rose Path)
+      {
+        image: 'scene2.png',
+        speaker: 'نور الهدى',
+        text: 'فتحتُ الباب وملقتش حد! بس في خط من بتلات الورد الأحمر وجواب مقفول بختم شمعي على الأرض..',
+        btn: 'التقاط الجواب وقراءته ✉️',
+        action: () => {
+          playChime();
+          letterModal.classList.add('show');
+        }
+      },
+      // 3: Scene 3 (Walking Sunset Garden)
+      {
+        image: 'scene3.jpeg',
+        speaker: 'نور الهدى',
+        text: 'بمشي ورا بتلات الورد وسط أنوار الغروب الساحرة والفوانيس الدافئة.. كل خطوة بتاخدني لسر مستخبي في نص الحديقة 🌸',
+        btn: 'الاقتراب من الطاولة 🌹',
+        action: () => advanceToStep(4)
+      },
+      // 4: Scene 4 (POV at the Covered Table)
+      {
+        image: 'scene4.png',
+        speaker: 'نور الهدى',
+        text: 'وصلت للطاولة.. في حاجة ضخمة متغطية بقماش حريري أبيض ومتزينة بالورد! همسك طرف القماش واكتشف إيه اللي جوه.. 🎁',
+        btn: 'رفع الغطاء واكتشاف السر ✨',
+        action: () => advanceToStep(5)
+      },
+      // 5: Scene 5 (Sayed covering eyes)
+      {
+        image: 'scene5.jpeg',
+        speaker: 'سيد',
+        text: 'غمّضي عينكِ ثانية واحدة يا نور.. النهاردة أول عيد ميلاد ليكي معايا، كل سنة وانتي طيبة ومنورة دنيتي يا أغلى ما في حياتي ❤️',
+        btn: 'كشف المفاجأة معاً 🌹',
+        action: () => {
+          advanceToStep(6);
+          setInterval(spawnFirework, 700);
+          setTimeout(() => celebrationCard.classList.add('show'), 2400);
+        }
+      },
+      // 6: Scene 6 (Finale & Giant Bouquet)
+      {
+        image: 'scene6.jpeg',
+        speaker: 'سيد & نور الهدى',
+        text: 'أضخم باقة ورد أحمر تتلألأ مع انطلاق الألعاب النارية في سماء الحديقة احتفالاً بأجمل يوم! 🎉❤️',
+        btn: 'مشاركة الفرحة 💖',
+        action: () => celebrationCard.classList.add('show')
+      }
+    ];
+
+    function advanceToStep(index) {
+      storyIndex = index;
+      const step = gameSteps[storyIndex];
+      switchSceneImage(step.image);
+      speakerName.innerText = step.speaker;
+      dialogText.innerText = step.text;
+      nextBtn.innerText = step.btn;
+      dialogWrapper.style.display = 'block';
+    }
+
+    nextBtn.addEventListener('click', () => {
+      initAudio();
+      gameSteps[storyIndex].action();
+    });
+
+    document.getElementById('leaveDoorBtn').addEventListener('click', () => {
+      letterModal.classList.remove('show');
+      advanceToStep(3);
+    });
+
+    document.getElementById('enterBtn').addEventListener('click', () => {
+      document.getElementById('startScreen').classList.add('hide');
+      initAudio();
+      startMusic();
+      advanceToStep(0);
+    });
+
+    // --- 5. Love Timeline Counter (Since August 11, 2026) ---
+    const startDate = new Date(2026, 7, 11, 0, 0, 0); // Month 7 = August
+
+    function updateLoveTimeline() {
+      const now = new Date();
+      let years = now.getFullYear() - startDate.getFullYear();
+      let months = now.getMonth() - startDate.getMonth();
+      let days = now.getDate() - startDate.getDate();
+      let hours = now.getHours() - startDate.getHours();
+      let minutes = now.getMinutes() - startDate.getMinutes();
+      let seconds = now.getSeconds() - startDate.getSeconds();
+
+      if (seconds < 0) { seconds += 60; minutes--; }
+      if (minutes < 0) { minutes += 60; hours--; }
+      if (hours < 0) { hours += 24; days--; }
+      if (days < 0) {
+        let prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+        days += prevMonth.getDate();
+        months--;
+      }
+      if (months < 0) {
+        months += 12;
+        years--;
+      }
+
+      const yStr = years > 0 ? `${years} سنة و ` : '';
+      const mStr = months > 0 ? `${months} شهر و ` : '';
+      const dStr = `${days} يوم`;
+      const timeStr = `${String(hours).padStart(2,'0')}س : ${String(minutes).padStart(2,'0')}د : ${String(seconds).padStart(2,'0')}ث`;
+
+      document.getElementById('liveTimer').innerText = `${yStr}${mStr}${dStr} و ${timeStr}`;
+    }
+    setInterval(updateLoveTimeline, 1000);
+    updateLoveTimeline();
+  </script>
+</body>
+</html>
